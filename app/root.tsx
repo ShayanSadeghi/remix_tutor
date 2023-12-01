@@ -1,5 +1,6 @@
+import { useEffect, useState } from "react";
 import { json, redirect } from "@remix-run/node";
-import type { LinksFunction } from "@remix-run/node";
+import type { LinksFunction, LoaderFunctionArgs } from "@remix-run/node";
 import {
   Form,
   NavLink, // use "Link" instead of "a" to do a client side routing
@@ -22,9 +23,11 @@ export const action = async () => {
   return redirect(`/contacts/${contact.id}/edit`);
 };
 
-export const loader = async () => {
-  const contacts = await getContacts();
-  return json({ contacts });
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const url = new URL(request.url);
+  const q = url.searchParams.get("q");
+  const contacts = await getContacts(q);
+  return json({ contacts, q });
 };
 
 export const links: LinksFunction = () => [
@@ -32,8 +35,14 @@ export const links: LinksFunction = () => [
 ];
 
 export default function App() {
-  const { contacts } = useLoaderData<typeof loader>();
+  const { contacts, q } = useLoaderData<typeof loader>();
   const navigation = useNavigation();
+
+  const [query, setQuery] = useState(q || "");
+
+  useEffect(() => {
+    setQuery(q || "");
+  }, [q]);
 
   return (
     <html lang="en">
@@ -54,6 +63,8 @@ export default function App() {
                 placeholder="Search"
                 type="search"
                 name="q"
+                value={query}
+                onChange={(event) => setQuery(event.currentTarget.value)}
               />
               <div id="search-spinner" aria-hidden hidden={true} />
             </Form>
