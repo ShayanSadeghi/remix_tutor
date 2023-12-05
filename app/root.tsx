@@ -42,7 +42,7 @@ export default function App() {
   const searching =
     navigation.location &&
     new URLSearchParams(navigation.location.search).has("q");
-  console.log("search", searching);
+
   const [query, setQuery] = useState(q || "");
 
   useEffect(() => {
@@ -64,7 +64,10 @@ export default function App() {
             <Form
               id="search-form"
               role="search"
-              onChange={(e) => submit(e.currentTarget)}
+              onChange={(e) => {
+                const isFirstSearch = q === null;
+                submit(e.currentTarget, { replace: !isFirstSearch });
+              }}
             >
               <input
                 id="q"
